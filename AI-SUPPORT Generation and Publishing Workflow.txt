@@ -1,0 +1,45 @@
+================================================================================
+AI-SUPPORT.md GENERATION & PUBLISHING WORKFLOW (CURSOR or OTHER CODING AGENT)
+================================================================================
+
+[Step 0: Workspace Setup]
+Copy `AI-SUPPORT-documentation-generation-prompt.md` into the `docs/` directory of the project.
+
+--------------------------------------------------------------------------------
+[Prompt 1: Execution & Generation]
+--------------------------------------------------------------------------------
+Read `docs/AI-SUPPORT-documentation-generation-prompt.md` and systematically execute the task. 
+
+Workflow rules for this turn:
+1. First, inspect the actual codebase, configuration schemas, tests, and entry points.
+2. Create or update the modular source documents under `docs/` so they reflect runtime reality.
+3. Generate the consolidated root `AI-SUPPORT.md` from those verified source files.
+4. Update the root `README.md` with the mandatory "Need help? Ask an AI assistant" section linking directly to `AI-SUPPORT.md`.
+5. Create `docs/support-evaluation.md` with realistic test questions (including unanswerable/negative cases).
+
+Do not take shortcuts. Source code and tests take precedence over existing documentation.
+
+--------------------------------------------------------------------------------
+[Prompt 2: Adversarial Audit & Verification]
+--------------------------------------------------------------------------------
+Perform an adversarial audit of `AI-SUPPORT.md` against the codebase:
+
+1. Verification Check: Cross-reference every documented CLI flag, UI button, and config default against the actual source code. Did you document anything that doesn't exist?
+2. Negative Constraint Check: Does `AI-SUPPORT.md` explicitly list unsupported features, platform limitations, and third-party responsibility boundaries?
+3. Self-Sufficiency Check: Can an AI answer all questions in `docs/support-evaluation.md` using ONLY `AI-SUPPORT.md` without inspecting source code?
+4. Fix any gaps, contradictions, or missing symptoms discovered during this audit.
+
+--------------------------------------------------------------------------------
+[Prompt 3: Scaffolding Cleanup & Link Verification]
+--------------------------------------------------------------------------------
+1. Scan all files in the repository (especially `README.md`, `docs/README.md`, and `llms.txt`) to ensure nothing links to `AI-SUPPORT-documentation-generation-prompt.md`.
+2. Permanently delete `docs/AI-SUPPORT-documentation-generation-prompt.md`.
+3. Verify that the link to `AI-SUPPORT.md` in the root `README.md` is valid and working.
+
+--------------------------------------------------------------------------------
+[Prompt 4: Version Control & Deployment]
+--------------------------------------------------------------------------------
+Review git status, stage all documentation changes, and commit with message:
+"Updated documentation to support AI assistance and LLM discovery."
+Push to the active remote branch.
+================================================================================
