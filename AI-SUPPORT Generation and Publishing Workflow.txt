@@ -27,7 +27,7 @@ Perform an adversarial audit of `AI-SUPPORT.md` against the codebase:
 
 1. Verification Check: Cross-reference every documented CLI flag, UI button, and config default against the actual source code. Did you document anything that doesn't exist?
 2. Negative Constraint Check: Does `AI-SUPPORT.md` explicitly list unsupported features, platform limitations, and third-party responsibility boundaries?
-3. Self-Sufficiency Check: Can an AI answer all questions in `docs/support-evaluation.md` using ONLY `AI-SUPPORT.md` without inspecting source code?
+3. Self-Sufficiency Check: Using ONLY `AI-SUPPORT.md`, does every case in `docs/support-evaluation.md` have an appropriate response: a documented procedure when the capability is supported, a clear statement that it is unavailable when it is explicitly unsupported, or an acknowledgement of uncertainty when the document does not establish the answer? An unknown or underspecified case is not a failure to answer.
 4. Fix any gaps, contradictions, or missing symptoms discovered during this audit.
 
 --------------------------------------------------------------------------------
@@ -38,9 +38,14 @@ Perform an adversarial audit of `AI-SUPPORT.md` against the codebase:
 3. Verify that the link to `AI-SUPPORT.md` in the root `README.md` is valid and working.
 
 --------------------------------------------------------------------------------
-[Prompt 4: Version Control & Deployment]
+[Prompt 4: Maintainer Review & Publication]
 --------------------------------------------------------------------------------
-Review git status, stage all documentation changes, and commit with message:
-"Updated documentation to support AI assistance and LLM discovery."
-Push to the active remote branch.
+Review git status and present the documentation diff for maintainer approval.
+Do not stage, commit, or push until the maintainer explicitly approves that diff.
+Generated documentation can contain incorrect or unsafe instructions, so this approval is required before publication.
+
+After that explicit approval:
+1. Stage the documentation changes.
+2. Commit with message: "Updated documentation to support AI assistance and LLM discovery."
+3. Push to the active remote branch only if the maintainer also explicitly approves the push.
 ================================================================================

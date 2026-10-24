@@ -375,12 +375,12 @@ Instructing a coding agent to inspect a codebase, write modular documentation, b
 \begin{enumerate}
     \item \textbf{Step 0 (Workspace Setup):} Copy the \href{\ExtractionPromptURL}{knowledge extraction specification} into \path{docs/}.
     \item \textbf{Prompt 1 (Execution and Generation):} The agent inspects the codebase, configuration schemas, tests, and entry points; updates the modular documents under \texttt{docs/}; compiles the root \texttt{AI-SUPPORT.md} from those files; adds the ``Need help? Ask an AI assistant'' section to the root \texttt{README.md}; creates or updates a root \texttt{llms.txt} that links to and briefly references \texttt{AI-SUPPORT.md}; and creates \texttt{docs/support-evaluation.md}, including unanswerable and negative cases.
-    \item \textbf{Prompt 2 (Adversarial Audit and Verification):} In a separate turn, the agent checks every documented CLI flag, UI control, and configuration default against the source, checks that unsupported features and third-party boundaries are explicit, and checks that every question in \texttt{docs/support-evaluation.md} can be answered from \texttt{AI-SUPPORT.md} alone.
+    \item \textbf{Prompt 2 (Adversarial Audit and Verification):} In a separate turn, the agent checks every documented CLI flag, UI control, and configuration default against the source, checks that unsupported features and third-party boundaries are explicit, and checks that every case in \texttt{docs/support-evaluation.md} has an appropriate supported, explicitly unsupported, or unknown response derivable from \texttt{AI-SUPPORT.md} alone. An unknown or underspecified case is a successful outcome, not a missing answer.
     \item \textbf{Prompt 3 (Scaffolding Cleanup and Link Verification):} The agent checks that nothing in the repository links to the generation prompt, deletes that copy from \path{docs/}, and verifies the root \texttt{README.md} link to \texttt{AI-SUPPORT.md}.
-    \item \textbf{Prompt 4 (Version Control and Deployment):} The agent reviews \texttt{git status}, stages the documentation changes, commits them with the message ``Updated documentation to support AI assistance and LLM discovery.'', and pushes to the active remote branch.
+    \item \textbf{Prompt 4 (Maintainer Review and Publication):} The agent presents the documentation diff and stops. It stages and commits the changes, with the message ``Updated documentation to support AI assistance and LLM discovery.'', only after the maintainer explicitly approves that diff, and it pushes to the active remote branch only after a separate explicit approval to publish.
 \end{enumerate}
 
-\textbf{Methodological scope of Prompt 2:} The runbook calls this pass an adversarial audit. Executed by the same model within the same repository, it is a \textit{consistency review}, not an independent verification. It catches omitted sections, formatting drift, and obvious discrepancies, but can share blind spots with Prompt 1. Independent validation requires deterministic build checks (Section~\ref{subsec:ci_checks}), human review of the Prompt~4 diff before that push is accepted, and isolated model evaluation (Section~\ref{sec:verification}).
+\textbf{Methodological scope of Prompt 2:} The runbook calls this pass an adversarial audit. Executed by the same model within the same repository, it is a \textit{consistency review}, not an independent verification. It catches omitted sections, formatting drift, and obvious discrepancies, but can share blind spots with Prompt 1. Independent validation requires deterministic build checks (Section~\ref{subsec:ci_checks}), explicit maintainer approval of the Prompt~4 diff before any commit or push, and isolated model evaluation (Section~\ref{sec:verification}).
 
 \subsection{Deterministic Bundling and CI Freshness Enforcement}
 \label{subsec:ci_checks}
@@ -706,9 +706,13 @@ Perform an adversarial audit of `AI-SUPPORT.md` against the codebase:
 2. Negative Constraint Check: Does `AI-SUPPORT.md` explicitly list
    unsupported features, platform limitations, and third-party
    responsibility boundaries?
-3. Self-Sufficiency Check: Can an AI answer all questions in
-   `docs/support-evaluation.md` using ONLY `AI-SUPPORT.md` without
-   inspecting source code?
+3. Self-Sufficiency Check: Using ONLY `AI-SUPPORT.md`, does every
+   case in `docs/support-evaluation.md` have an appropriate response:
+   a documented procedure when the capability is supported, a clear
+   statement that it is unavailable when it is explicitly unsupported,
+   or an acknowledgement of uncertainty when the document does not
+   establish the answer? An unknown or underspecified case is not a
+   failure to answer.
 4. Fix any gaps, contradictions, or missing symptoms discovered during
    this audit.
 
@@ -720,10 +724,20 @@ Perform an adversarial audit of `AI-SUPPORT.md` against the codebase:
 3. Verify that the link to `AI-SUPPORT.md` in the root `README.md` is
    valid and working.
 
-[Prompt 4: Version Control & Deployment]
-Review git status, stage all documentation changes, and commit with message:
-"Updated documentation to support AI assistance and LLM discovery."
-Push to the active remote branch.
+[Prompt 4: Maintainer Review & Publication]
+Review git status and present the documentation diff for maintainer
+approval.
+Do not stage, commit, or push until the maintainer explicitly approves
+that diff.
+Generated documentation can contain incorrect or unsafe instructions, so
+this approval is required before publication.
+
+After that explicit approval:
+1. Stage the documentation changes.
+2. Commit with message:
+   "Updated documentation to support AI assistance and LLM discovery."
+3. Push to the active remote branch only if the maintainer also
+   explicitly approves the push.
 \end{verbatim}
 \end{scriptsize}
 
