@@ -17,7 +17,7 @@
 \usepackage{fancyhdr}
 \usepackage{lastpage}
 \PassOptionsToPackage{hyphens}{url}
-\usepackage[hidelinks]{hyperref}
+\usepackage[hidelinks,breaklinks]{hyperref}
 \usepackage{booktabs}
 \usepackage{array}
 \usepackage{tabularx}
@@ -27,8 +27,13 @@
 \newcommand{\RepoBaseURL}{https://github.com/dobrado76/MyFileExplorer}
 \newcommand{\WebSupportURL}{https://github.com/dobrado76/MyFileExplorer/blob/main/AI-SUPPORT.md}
 \newcommand{\RawSupportURL}{https://raw.githubusercontent.com/dobrado76/MyFileExplorer/refs/heads/main/AI-SUPPORT.md}
-\newcommand{\ExtractionPromptURL}{https://github.com/MeaningfulnessMediaGroup/[PLACEHOLDER_EXTRACTION_PROMPT_URL]}
-\newcommand{\WorkflowScriptURL}{https://github.com/MeaningfulnessMediaGroup/[PLACEHOLDER_WORKFLOW_SCRIPT_URL]}
+% The runbook filename is percent-encoded. \% would still be a comment here,
+% so % is made an ordinary character for these two definitions only.
+\begingroup
+\catcode`\%=12\relax
+\gdef\ExtractionPromptURL{https://raw.githubusercontent.com/MeaningfulnessMediaGroup/MMG-PASD/refs/heads/main/AI-SUPPORT-documentation-generation-prompt.md}
+\gdef\WorkflowScriptURL{https://raw.githubusercontent.com/MeaningfulnessMediaGroup/MMG-PASD/refs/heads/main/AI-SUPPORT%20Generation%20and%20Publishing%20Workflow.txt}
+\endgroup
 
 % --- GEOMETRY AND LAYOUT ---
 \geometry{
@@ -85,8 +90,8 @@ Traditional software documentation optimizes for human searchability, requiring 
         \begin{tabularx}{\linewidth}{@{}r >{\raggedright\arraybackslash}X@{}}
             \textbf{Reference Application:} & \textit{MyFileExplorer} (\url{\RepoBaseURL}) \\
             \textbf{Support Artifact:} & Root-level \texttt{AI-SUPPORT.md} (\href{\RawSupportURL}{Raw Markdown Payload}) \\
-            \textbf{Extraction Specification:} & \texttt{AI-SUPPORT-documentation-generation-prompt.md} (\href{\ExtractionPromptURL}{View on GitHub}) \\
-            \textbf{Maintenance Runbook:} & 5-Step Staged Generation \& Review Protocol (\href{\WorkflowScriptURL}{View on GitHub}) \\
+            \textbf{Extraction Specification:} & \href{\ExtractionPromptURL}{\texttt{AI-SUPPORT-documentation-generation-prompt.md}} \\
+            \textbf{Maintenance Runbook:} & \href{\WorkflowScriptURL}{5-Step Staged Generation \& Review Protocol} \\
         \end{tabularx}
     }%
 }
@@ -182,6 +187,9 @@ Commercial documentation hosts and AI support services provide integrated chatbo
 
 The architectural premise of PASD is the separation of knowledge maintenance from inference execution. Instead of embedding an AI service into the application, the maintainer publishes a verified, structured knowledge artifact ($K$), and the user supplies their chosen language model ($M$) to interpret it.
 
+% The display equation belongs with this heading. Without the break it
+% opens the next page alone.
+\newpage
 \subsection{A Conceptual Model of Grounded Support}
 To clarify what a support document can and cannot guarantee, we model a single-turn or multi-turn support interaction as a mapping from five inputs to a three-dimensional outcome tuple:
 
@@ -365,14 +373,14 @@ While Layer A defines what a conformant \texttt{AI-SUPPORT.md} file must contain
 Instructing a coding agent to inspect a codebase, write modular documentation, build a consolidated support bundle, and verify accuracy in a single prompt frequently results in truncated output or superficial coverage. We recommend a five-stage workflow (detailed as a reproducible runbook in Appendix~\ref{app:prompt}) that separates initial generation from review:
 
 \begin{enumerate}
-    \item \textbf{Stage 0 (Setup):} Add the extraction-specification file to \texttt{docs/}.
-    \item \textbf{Stage 1 (Codebase Inspection and Generation):} The agent inspects source files, UI definitions, schemas, error strings, and tests; updates modular files under \texttt{docs/}; compiles the root \texttt{AI-SUPPORT.md}; updates the root \texttt{README.md}; and creates \texttt{docs/support-evaluation.md}.
-    \item \textbf{Stage 2 (Second-Pass Consistency Review):} In a separate turn, the agent cross-checks documented flags, UI controls, defaults, and negative boundaries against the source code and checks whether the evaluation questions are answerable from \texttt{AI-SUPPORT.md}.
-    \item \textbf{Stage 3 (Scaffolding Cleanup):} The agent verifies that no documentation files link to the temporary generation prompt, removes the prompt file, and validates local links.
-    \item \textbf{Stage 4 (Maintainer Audit and Commit):} The human maintainer reviews the diff and commits the updated documentation alongside the code.
+    \item \textbf{Step 0 (Workspace Setup):} Copy the \href{\ExtractionPromptURL}{knowledge extraction specification} into \path{docs/}.
+    \item \textbf{Prompt 1 (Execution and Generation):} The agent inspects the codebase, configuration schemas, tests, and entry points; updates the modular documents under \texttt{docs/}; compiles the root \texttt{AI-SUPPORT.md} from those files; adds the ``Need help? Ask an AI assistant'' section to the root \texttt{README.md}; creates or updates a root \texttt{llms.txt} that links to and briefly references \texttt{AI-SUPPORT.md}; and creates \texttt{docs/support-evaluation.md}, including unanswerable and negative cases.
+    \item \textbf{Prompt 2 (Adversarial Audit and Verification):} In a separate turn, the agent checks every documented CLI flag, UI control, and configuration default against the source, checks that unsupported features and third-party boundaries are explicit, and checks that every question in \texttt{docs/support-evaluation.md} can be answered from \texttt{AI-SUPPORT.md} alone.
+    \item \textbf{Prompt 3 (Scaffolding Cleanup and Link Verification):} The agent checks that nothing in the repository links to the generation prompt, deletes that copy from \path{docs/}, and verifies the root \texttt{README.md} link to \texttt{AI-SUPPORT.md}.
+    \item \textbf{Prompt 4 (Version Control and Deployment):} The agent reviews \texttt{git status}, stages the documentation changes, commits them with the message ``Updated documentation to support AI assistance and LLM discovery.'', and pushes to the active remote branch.
 \end{enumerate}
 
-\textbf{Methodological Scope of Stage 2:} A second pass executed by the same model within the same repository is a \textit{consistency review}, not an independent verification. It catches omitted sections, formatting drift, and obvious discrepancies, but can share blind spots with Stage 1. Independent validation requires deterministic build checks (Section~\ref{subsec:ci_checks}), human review, and isolated model evaluation (Section~\ref{sec:verification}).
+\textbf{Methodological scope of Prompt 2:} The runbook calls this pass an adversarial audit. Executed by the same model within the same repository, it is a \textit{consistency review}, not an independent verification. It catches omitted sections, formatting drift, and obvious discrepancies, but can share blind spots with Prompt 1. Independent validation requires deterministic build checks (Section~\ref{subsec:ci_checks}), human review of the Prompt~4 diff before that push is accepted, and isolated model evaluation (Section~\ref{sec:verification}).
 
 \subsection{Deterministic Bundling and CI Freshness Enforcement}
 \label{subsec:ci_checks}
@@ -486,23 +494,17 @@ Alongside our related specifications for multi-tiered AI authorship disclosure~\
 The core proposition is simple: \textbf{every sufficiently complex software project should ship a verifiable, self-contained \texttt{AI-SUPPORT.md} knowledge base.} The developer maintains the knowledge. The user chooses the AI. And first-line technical support becomes portable, transparent, and grounded---without requiring proprietary support infrastructure.
 
 
-% -------------------
-% About the Author
-% -------------------
-\vspace{1cm}
-\section*{About the Author}
-
-\textbf{Djeff Bee} is the Principal Architect at Meaningfulness Media Group and the creator of the \textit{Speculative Ontological Engine} (SOE) and the \textit{Authorship Transparency Statement} (ATS) framework.
-
-Djeff Bee is the professional pseudonym of \textbf{Dominic Branchaud}, a senior research engineer with more than twenty-five years of experience in computer graphics, computer vision, and immersive simulation systems. His career has included pivotal roles at \textbf{CSIRO Data61}, \textbf{UNSW EPICentre}, \textbf{Lysaght\textsuperscript{\textregistered} Bluescope}, and the \textbf{Laboratory of Research in Imaging for Orthopedics (LIO)}.
-
-He has authored numerous peer-reviewed publications (ACM SIGGRAPH, IEEE, SPIE) and holds multiple patents in 3D reconstruction and imaging. The PASD specification and its \textit{MyFileExplorer} reference implementation apply systems-engineering rigour---structured verification, explicit boundary contracts, and auditable pipelines---to AI-assisted software support.
-
 
 \newpage
 % -------------------
 % Bibliography
+% References are set smaller and single-spaced, a common journal convention,
+% so the list stays on one page without tightening the article body.
 % -------------------
+\begingroup
+\setstretch{1.0}
+\renewcommand{\bibfont}{\small}
+\setlength{\bibsep}{0.35em plus 0.1em minus 0.1em}
 \bibliographystyle{plainnat}
 \begin{thebibliography}{99}
 
@@ -552,6 +554,7 @@ Sharma, M., Tong, M., Korbak, T., Duvenaud, D., Askell, A., Bowman, S. R., Cheng
 Wen, B., Yao, J., Feng, S., Xu, C., Tsvetkov, Y., Howe, B., \& Wang, L. L. (2025). Know Your Limits: A Survey of Abstention in Large Language Models. \textit{Transactions of the Association for Computational Linguistics (TACL)}, 13, 529--556.
 
 \end{thebibliography}
+\endgroup
 
 
 \clearpage
@@ -642,16 +645,16 @@ To illustrate the intended normative behavior of the Three-State Epistemic Model
 \section{Reproducible Layer B Generation Procedure}
 \label{app:prompt}
 
-For maintainers who wish to use an AI coding assistant (such as Cursor, Claude Code, or Aider) to generate and maintain a Layer A conformant \texttt{AI-SUPPORT.md} file, this appendix provides the concrete operational runbook corresponding to Section~\ref{sec:maintenance}. The full extraction specification and sequential prompt script are maintained at:
+For maintainers who wish to use an AI coding assistant (such as Cursor, Claude Code, or Aider) to generate and maintain a Layer A conformant \texttt{AI-SUPPORT.md} file, this appendix provides the concrete operational runbook corresponding to Section~\ref{sec:maintenance}. The full extraction specification and sequential prompt script are:
 
 \begin{itemize}
-    \scriptsize
-    \item \textbf{Knowledge Extraction Specification:} \\
-    \path{AI-SUPPORT-documentation-generation-prompt.md} \\
-    \url{\ExtractionPromptURL}
-    \item \textbf{Sequential Agent Runbook (\texttt{doc-prompt.txt}):} \\
-    \url{\WorkflowScriptURL}
+    \item \textbf{Knowledge extraction specification}\\
+    \href{\ExtractionPromptURL}{\texttt{AI-SUPPORT-documentation-generation-prompt.md}}
+    \item \textbf{Sequential agent runbook}\\
+    \href{\WorkflowScriptURL}{\texttt{AI-SUPPORT Generation and Publishing Workflow.txt}}
 \end{itemize}
+
+\noindent The addresses themselves are printed once, in Appendix~\ref{app:urls}.
 
 \subsection{Scope of the Extraction Specification}
 The \path{AI-SUPPORT-documentation-generation-prompt.md} file instructs the coding agent across fourteen verification and authoring tasks:
@@ -663,33 +666,64 @@ The \path{AI-SUPPORT-documentation-generation-prompt.md} file instructs the codi
     \item \textbf{Bundling, CI Checks, \& Evaluation Suite (Sections 11--14):} Create deterministic bundling/validation commands for CI and construct \path{docs/support-evaluation.md} with independent positive and negative test cases.
 \end{enumerate}
 
-\subsection{Sequential Execution Commands (\texttt{doc-prompt.txt})}
-To avoid single-turn output truncation, maintainers execute the workflow across five discrete steps:
+\subsection{Sequential Execution Commands}
+To avoid single-turn output truncation, maintainers paste the following prompts, unchanged, as five discrete turns. The text is the published runbook.
 
 \begin{scriptsize}
 \begin{verbatim}
-Step 0 (Workspace Setup):
-  Copy AI-SUPPORT-documentation-generation-prompt.md into docs/
+[Step 0: Workspace Setup]
+Copy `AI-SUPPORT-documentation-generation-prompt.md` into the `docs/`
+directory of the project.
 
-Prompt 1 (Codebase Inspection & Generation):
-  "Read docs/AI-SUPPORT-documentation-generation-prompt.md and perform the
-   task. Inspect the codebase first, build or update the modular docs/ files,
-   generate the root AI-SUPPORT.md, update the root README.md, and create
-   docs/support-evaluation.md."
+[Prompt 1: Execution & Generation]
+Read `docs/AI-SUPPORT-documentation-generation-prompt.md` and systematically
+execute the task.
 
-Prompt 2 (Second-Pass Consistency Review):
-  "Review AI-SUPPORT.md against the codebase. Verify that all documented UI
-   labels, CLI flags, and defaults exist, check that unsupported capabilities
-   and third-party boundaries are explicit, and fix any omissions."
+Workflow rules for this turn:
+1. First, inspect the actual codebase, configuration schemas, tests, and
+   entry points.
+2. Create or update the modular source documents under `docs/` so they
+   reflect runtime reality.
+3. Generate the consolidated root `AI-SUPPORT.md` from those verified
+   source files.
+4. Update the root `README.md` with the mandatory "Need help? Ask an AI
+   assistant" section linking directly to `AI-SUPPORT.md`.
+5. Create or update a root `llms.txt` that links to and briefly
+   references `AI-SUPPORT.md`. Do not copy the support document into
+   `llms.txt`, and do not create `llms-full.txt`.
+6. Create `docs/support-evaluation.md` with realistic test questions
+   (including unanswerable/negative cases).
 
-Prompt 3 (Scaffolding Cleanup & Link Check):
-  "Ensure no repository files link to
-   AI-SUPPORT-documentation-generation-prompt.md, delete that file from docs/,
-   and verify that the root README.md link to AI-SUPPORT.md works."
+Do not take shortcuts. Source code and tests take precedence over existing
+documentation.
 
-Step 4 (Human Review & Commit):
-  Review git diff, run the documentation validation check, and commit:
-  "Updated documentation to support AI assistance and LLM discovery."
+[Prompt 2: Adversarial Audit & Verification]
+Perform an adversarial audit of `AI-SUPPORT.md` against the codebase:
+
+1. Verification Check: Cross-reference every documented CLI flag, UI button,
+   and config default against the actual source code. Did you document
+   anything that doesn't exist?
+2. Negative Constraint Check: Does `AI-SUPPORT.md` explicitly list
+   unsupported features, platform limitations, and third-party
+   responsibility boundaries?
+3. Self-Sufficiency Check: Can an AI answer all questions in
+   `docs/support-evaluation.md` using ONLY `AI-SUPPORT.md` without
+   inspecting source code?
+4. Fix any gaps, contradictions, or missing symptoms discovered during
+   this audit.
+
+[Prompt 3: Scaffolding Cleanup & Link Verification]
+1. Scan all files in the repository (especially `README.md`,
+   `docs/README.md`, and `llms.txt`) to ensure nothing links to
+   `AI-SUPPORT-documentation-generation-prompt.md`.
+2. Permanently delete `docs/AI-SUPPORT-documentation-generation-prompt.md`.
+3. Verify that the link to `AI-SUPPORT.md` in the root `README.md` is
+   valid and working.
+
+[Prompt 4: Version Control & Deployment]
+Review git status, stage all documentation changes, and commit with message:
+"Updated documentation to support AI assistance and LLM discovery."
+Push to the active remote branch.
 \end{verbatim}
 \end{scriptsize}
 
@@ -770,6 +804,45 @@ Step 4 (Human Review & Commit):
 
     \item[Version Bounding] \label{def:version_bounding}
     The explicit declaration (\texttt{PASD-003}) of the software version or commit range covered by \texttt{AI-SUPPORT.md}, paired with guidance requiring the assistant to verify the user's version before providing version-sensitive advice.
+\end{description}
+
+
+\newpage
+% -------------------
+% Appendix D - Canonical artifact addresses
+% -------------------
+\section{Canonical Artifact Addresses}
+\label{app:urls}
+
+The two Layer~B artifacts are published with this specification. Each address is printed in full only here. In the rest of the document the artifact name is a link to the same address, and the address is not shown as text.
+
+\begin{description}
+    \item[Knowledge extraction specification]\mbox{}\\
+    \href{\ExtractionPromptURL}{\ttfamily
+      https://raw.githubusercontent.com/\linebreak
+      MeaningfulnessMediaGroup/\allowbreak%
+      MMG-PASD/\allowbreak%
+      refs/\allowbreak%
+      heads/\allowbreak%
+      main/\linebreak
+      AI-SUPPORT-\allowbreak%
+      documentation-\allowbreak%
+      generation-\allowbreak%
+      prompt.md}
+
+    \item[Sequential agent runbook]\mbox{}\\
+    \href{\WorkflowScriptURL}{\ttfamily
+      https://raw.githubusercontent.com/\linebreak
+      MeaningfulnessMediaGroup/\allowbreak%
+      MMG-PASD/\allowbreak%
+      refs/\allowbreak%
+      heads/\allowbreak%
+      main/\linebreak
+      AI-SUPPORT\%20\allowbreak%
+      Generation\%20\allowbreak%
+      and\%20\allowbreak%
+      Publishing\%20\allowbreak%
+      Workflow.txt}
 \end{description}
 
 \end{document}

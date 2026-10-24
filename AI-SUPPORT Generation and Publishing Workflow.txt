@@ -15,7 +15,8 @@ Workflow rules for this turn:
 2. Create or update the modular source documents under `docs/` so they reflect runtime reality.
 3. Generate the consolidated root `AI-SUPPORT.md` from those verified source files.
 4. Update the root `README.md` with the mandatory "Need help? Ask an AI assistant" section linking directly to `AI-SUPPORT.md`.
-5. Create `docs/support-evaluation.md` with realistic test questions (including unanswerable/negative cases).
+5. Create or update a root `llms.txt` that links to and briefly references `AI-SUPPORT.md`. Do not copy the support document into `llms.txt`, and do not create `llms-full.txt`.
+6. Create `docs/support-evaluation.md` with realistic test questions (including unanswerable/negative cases).
 
 Do not take shortcuts. Source code and tests take precedence over existing documentation.
 
