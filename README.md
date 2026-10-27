@@ -3,7 +3,7 @@
 # Portable AI Support Documentation (PASD)
 ### A Standardized, Self-Contained Documentation Framework for Software Support
 
-[![Specification](https://img.shields.io/badge/Specification-MMG--PASD--1.0-blue.svg)](MMG-PASD-1.0.pdf)
+[![Specification](https://img.shields.io/badge/Specification-MMG--PASD--1.0-blue.svg)](MMG-PASD-1.0-Portable_AI_Support_Documentation.pdf)
 [![Status](https://img.shields.io/badge/Status-Public_Draft-orange.svg)](#architecture-the-3-layers-of-pasd)
 [![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.19163276-blue.svg)](https://doi.org/10.5281/zenodo.19163276)
