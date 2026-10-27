@@ -1,175 +1,190 @@
+<div align="center">
+
 # Portable AI Support Documentation (PASD)
+### A Standardized, Self-Contained Documentation Framework for Software Support
 
-**A vendor-neutral, self-contained documentation specification for AI-assisted software support.**
+[![Specification](https://img.shields.io/badge/Specification-MMG--PASD--1.0-blue.svg)](MMG-PASD-1.0.pdf)
+[![Status](https://img.shields.io/badge/Status-Public_Draft-orange.svg)](#architecture-the-3-layers-of-pasd)
+[![License: CC BY 4.0](https://img.shields.io/badge/License-CC_BY_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.19163276-blue.svg)](https://doi.org/10.5281/zenodo.19163276)
+[![Reference Implementation](https://img.shields.io/badge/Reference_App-MyFileExplorer-success.svg)](https://github.com/dobrado76/MyFileExplorer)
 
-**Specification:** `MMG-PASD-1.0` · **Status:** Proposed Specification — Public Draft · **Publisher:** Meaningfulness Media Group (MMG)
+<p align="center">
+  <b>The developer provides the verified knowledge. The user provides the AI assistant.</b><br>
+  Zero hosted chatbots. Zero API costs. Zero hallucinated settings.
+</p>
 
-> **The developer supplies verified knowledge. The user chooses the AI.**
+</div>
 
-Software users should be able to ask their preferred AI assistant a question about an application and receive an accurate, version-specific answer—without relying on a developer-operated chatbot or asking the maintainer the same questions repeatedly.
+---
 
-PASD proposes a straightforward way to make that possible: ship a comprehensive, structured `AI-SUPPORT.md` file alongside the software. A user can provide that file to a compatible assistant (for example, ChatGPT, Claude, Gemini, or a local LLM) and ask natural-language questions about installation, settings, workflows, errors, and limitations.
+## ⚡ The Problem: The Support Bottleneck in the AI Era
 
-PASD is **a documentation specification and supporting authoring workflow**, not an AI model, hosted support service, chatbot, or mandatory runtime dependency. It does not guarantee that an assistant will answer correctly; the specification defines the knowledge boundaries and an optional protocol for evaluating support quality.
+When users encounter an error or configuration question in your software, they rarely search documentation wikis anymore. They open ChatGPT, Claude, or a local model and ask:
 
-## Read the specification
+> *"How do I enable cloud sync in App X?"*  
+> *"Why did my export fail with error code 12?"*
 
-**[Download the PASD 1.0 paper (PDF)](MMG-PASD-1.0-Portable_AI_Support_Documentation.pdf)** · **[LaTeX source](main.tex)**
+Because standard documentation only describes what software **can** do, the LLM encounters an informational void. Due to statistical priors on similar applications and instruction-tuning sycophancy, the assistant **hallucinates plausible answers**: it invents nonexistent menu paths, fake configuration flags, and dangerous reset commands.
 
-The paper presents the rationale, normative requirements, implementation workflow, threat model, evaluation design, and a reference implementation. The specification is published as a **proposal**, not as an adopted industry standard; effectiveness testing remains future work.
+Meanwhile, hosting a commercial RAG support bot on your docs site costs $50–$300/month, requires infrastructure maintenance, and leaks user logs to external cloud APIs.
 
-## Why PASD?
+---
 
-Traditional documentation is primarily organised for human browsing. A user experiencing an unfamiliar symptom may need to search multiple pages, identify the relevant technical terminology, and reconstruct a troubleshooting procedure. Ungrounded language models can instead invent plausible but nonexistent settings, commands, and features.
+## 💡 The Solution: Bring Your Own AI (BYOAI)
 
-PASD addresses this by packaging **verified, support-oriented knowledge** into a portable Markdown artifact. In particular, it requires a clear distinction between what software **supports**, what it **explicitly does not support**, and what the supplied documentation **does not establish**.
-
-
-| Conventional support problem                            | PASD approach                                           |
-| ------------------------------------------------------- | ------------------------------------------------------- |
-| Scattered instructions and reference pages              | A self-contained support knowledge base                 |
-| Users describe symptoms rather than internal components | Symptom-oriented troubleshooting paths                  |
-| AI invents nonexistent controls or functionality        | Explicit *Negative Space* and calibrated uncertainty    |
-| Confusion between the application and external tools    | Third-party responsibility and diagnostic boundaries    |
-| Procedures may be unsafe or destructive                 | Backup warnings and non-destructive checks first        |
-| Documentation gets out of date                          | Version bounding, staged review, and optional CI checks |
-| Support quality is assumed rather than measured         | An optional, controlled evaluation protocol             |
-
-
-
-
-## How it works
+**PASD** formalizes a lightweight alternative: shipping a single, version-bounded, self-contained Markdown file—canonically named **`AI-SUPPORT.md`**—directly alongside your software (in your repository root or inside your release installer).
 
 ```text
-Software project / maintainer
-          │
-          ├── verifies application behaviour
-          ├── maintains support documentation
-          └── distributes AI-SUPPORT.md
-                         │
-                         ▼
-User downloads / attaches the document
-(or provides the raw URL when retrieval is supported)
-                         │
-                         ▼
-           User's preferred AI assistant
-                         │
-                         ▼
-       Grounded, bounded support answer
+               TRADITIONAL SUPPORT                     PASD (BYOAI) SUPPORT
+               
+     [User encounters error / question]        [User encounters error / question]
+                     │                                         │
+                     ▼                                         ▼
+         Manual doc / forum search             Clicks in-app "Copy AI Help Link"
+                     │                          (or downloads local AI-SUPPORT.md)
+                     ▼                                         │
+        Confused by technical terms                             ▼
+                     │                         Pastes into ChatGPT / Claude / Ollama
+                     ▼                                         │
+       Funnels to Maintainer Issue Tracker                      ▼
+           (Recurring support burden)          AI reads verified state + negative space
+                                               ──► Delivers grounded diagnostic or
+                                                   calibrated abstention
 ```
 
-The file is ordinary Markdown. It can be hosted in a public repository or bundled with an application; it does not require a PASD-specific server or proprietary inference API. Assistants differ in their ability to open URLs, accept attachments, and retrieve long documents, so **direct file attachment is the recommended baseline when supported by the client**.
+---
 
-## The three layers
+## 🛡️ The Core Moat: The Three-State Epistemic Model
 
+Traditional manuals only document verified features. But preventing AI hallucination requires explicitly mapping the **Negative Space** of your application:
 
+| Epistemic State | Condition in `AI-SUPPORT.md` | Model Behavior Required by PASD |
+| :--- | :--- | :--- |
+| **1. Supported** | Explicitly documented as implemented in version $V$. | Explains exact verified UI controls, flags, and diagnostic steps. |
+| **2. Explicitly Unsupported** | Declared in the **Negative Space** section (anti-features, roadmap-only, or third-party responsibilities). | Clearly states the feature **does not exist**; blocks sycophantic hallucinations. |
+| **3. Unknown / Undocumented** | Neither documented nor declared unsupported; or diagnostic evidence $E$ is missing. | **Calibrated Abstention**: States the document does not establish the answer and requests clarifying logs instead of guessing. |
 
-### Layer A — Normative document specification
+---
 
-Defines what a conformant root-level `AI-SUPPORT.md` must contain, regardless of whether the document was written manually or with AI assistance. Core requirements include:
+## 📁 Repository Artifacts
 
-- Discoverability through the project's `README.md`.
-- A consolidated, version-bounded reference for routine end-user support.
-- Implementation-verified settings, UI labels, commands, defaults, and errors.
-- A symptom index and safe troubleshooting sequences.
-- Codebase-derived, actionable FAQs.
-- **Negative Space:** explicit statements of unsupported capabilities and known limitations.
-- Boundaries for third-party integrations and external dependencies.
-- Instructions for handling uncertainty, escalation, and sensitive diagnostic data.
+This repository houses the formal specification and the open-source generation toolchain:
 
+| Artifact | Description | Location |
+| :--- | :--- | :--- |
+| **White Paper / Formal Specification** | Complete 26-page academic specification (`MMG-PASD-1.0`). | [`MMG-PASD-1.0.pdf`](MMG-PASD-1.0.pdf) |
+| **Knowledge Extraction Specification** | 14-section prompt instructing coding agents on how to audit code and extract a support manual. | [`AI-SUPPORT-documentation-generation-prompt.md`](AI-SUPPORT-documentation-generation-prompt.md) |
+| **Sequential Agent Runbook** | 5-step prompt script for Cursor, Claude Code, or Aider to prevent single-turn context truncation. | [`AI-SUPPORT Generation and Publishing Workflow.txt`](AI-SUPPORT%20Generation%20and%20Publishing%20Workflow.txt) |
+| **Live Reference Implementation** | Production deployment in a real-world Windows desktop file workbench. | [*MyFileExplorer* Repository](https://github.com/dobrado76/MyFileExplorer) <br> [`AI-SUPPORT.md` (Raw Payload)](https://raw.githubusercontent.com/dobrado76/MyFileExplorer/refs/heads/main/AI-SUPPORT.md) |
 
+---
 
-### Layer B — Recommended authoring and maintenance
+## 🚀 Quickstart: Add `AI-SUPPORT.md` to Your Project in 5 Minutes
 
-A non-normative, staged approach to generating and reviewing the support artifact from the real codebase, keeping modular source documentation and the consolidated bundle consistent. Human-written PASD documents are equally valid: **using an AI coding assistant is not a conformance requirement**.
+You can generate and maintain a fully conformant support system using your existing AI coding assistant (Cursor Composer, Claude Code, Aider, or Copilot):
 
-### Layer C — Optional empirical evaluation
+### Step 1: Stage the Extraction Specification
+Download [`AI-SUPPORT-documentation-generation-prompt.md`](AI-SUPPORT-documentation-generation-prompt.md) and place it into your project's `docs/` directory.
 
-A reproducible method for evaluating support answers across four conditions: no project documentation, conventional documentation, content-equivalent unstructured documentation, and full PASD documentation. Suggested measures include supported-feature accuracy, negative-boundary precision, calibrated abstention, unsafe recommendations, and downstream issue resolution.
+### Step 2: Execute the 5-Step Runbook
+Open [`AI-SUPPORT Generation and Publishing Workflow.txt`](AI-SUPPORT%20Generation%20and%20Publishing%20Workflow.txt) and paste the prompts sequentially into your coding assistant:
 
-**Layer A conformance does not require completing Layer C experiments.** This repository presents the evaluation protocol; it does not claim completed benchmark results demonstrating an improvement.
+1. **Prompt 1 (Inspect & Generate):** The agent reads source code, entry points, schemas, and tests to draft modular docs in `docs/` and compiles the root `AI-SUPPORT.md`.
+2. **Prompt 2 (Consistency Review):** The agent cross-checks every documented UI label, CLI flag, and default against the actual codebase and verifies negative-space boundaries.
+3. **Prompt 3 (Cleanup):** The agent deletes the temporary prompt from `docs/` and verifies that nothing links to it.
+4. **Prompt 4 (Publish):** Commit the updated documentation alongside your code.
 
-## The three-state epistemic model
+### Step 3: Make It Discoverable in Your `README.md`
+Add a visible section near the top of your repository's root `README.md`:
 
-This is a central PASD requirement:
+```markdown
+## Need Help? Ask an AI Assistant
 
+You can get instant, grounded technical support by providing our verified support manual to your preferred AI assistant:
 
-| State                      | What the document establishes                                 | Expected response                                                      |
-| -------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| **Supported**              | The feature or workflow is verified for the specified version | Give the documented steps and prerequisites                            |
-| **Explicitly unsupported** | The feature is positively identified as unavailable           | Say so directly; do not invent menus or workarounds                    |
-| **Unknown / undocumented** | The provided evidence is insufficient                         | Acknowledge uncertainty, request details, or investigate when possible |
+1. **Copy our Raw Support Link:**  
+   `https://raw.githubusercontent.com/<user>/<repo>/refs/heads/main/AI-SUPPORT.md`
+2. **Paste it into ChatGPT, Claude, or Gemini** alongside your question or error log:  
+   > *"Read this documentation and help me fix this issue: [describe problem]"*
+3. **Using Local / Offline AI (LM Studio, Ollama)?**  
+   Drag and drop the local `AI-SUPPORT.md` file (included in the root directory) directly into your chat session.
+```
 
+---
 
-**Undocumented does not mean unsupported.** This avoids replacing hallucinated features with equally incorrect denials.
-
-## Getting started: adopt PASD for your project
-
-1. **Read the [PASD paper](MMG-PASD-1.0-Portable_AI_Support_Documentation.pdf)** to understand the normative requirements and the distinction between Layers A, B, and C.
-2. **Review the [documentation generation specification](AI-SUPPORT-documentation-generation-prompt.md).** It describes how an AI coding assistant should inspect implementation, create modular reference files, document unsupported behaviour, and assemble `AI-SUPPORT.md`.
-3. **Follow the [generation and publishing workflow](AI-SUPPORT%20Generation%20and%20Publishing%20Workflow.txt)** if you want a step-by-step AI-assisted approach. Its prompts are intended for a coding agent with repository access.
-4. **Review the result against real implementation and tests.** Pay particular attention to exact UI labels, configuration defaults, destructive recovery procedures, and external tools. The agent's second pass is a consistency check, not independent proof of correctness.
-5. **Publish the root** `AI-SUPPORT.md` **and link it prominently from your** `README.md`**.** Keep it version-aligned as the software evolves.
-6. **Optionally create independent support test cases** and use the paper's Layer C methodology to assess effectiveness.
-
-A PASD-style project may have a layout such as:
+## 🏗️ Architecture: The 3 Layers of PASD
 
 ```text
-project/
-├── README.md
-├── AI-SUPPORT.md
-├── llms.txt                     # optional discovery pointer
-└── docs/
-    ├── getting-started.md
-    ├── reference.md
-    ├── configuration.md
-    ├── troubleshooting.md
-    ├── FAQ.md
-    └── support-evaluation.md   # optional Layer C readiness
+┌────────────────────────────────────────────────────────────────────────┐
+│               LAYER A: Normative Document Specification                │
+│  • 10-Point Conformance Matrix (PASD-001 to PASD-010)                  │
+│  • Three-State Epistemic Model (Supported / Unsupported / Unknown)     │
+│  • Two-Tiered Topology (Tier-1 Triage Header / Tier-2 Deep Reference)  │
+│  • Symptom-Oriented Diagnostic Trees & Data-Safety Recovery Warnings   │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ implemented via
+┌───────────────────────────────────▼────────────────────────────────────┐
+│         LAYER B: Recommended Generation & Maintenance Lifecycle        │
+│  • 5-Stage Staged Generation & Consistency Review Runbook              │
+│  • Deterministic Bundler & CI Freshness Checks                         │
+│  • Raw Payload Tag-Pinning & Distribution Protocol                     │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ verified by
+┌───────────────────────────────────▼────────────────────────────────────┐
+│            LAYER C: Empirical Support Evaluation Protocol              │
+│  • Independent Test Harness (docs/support-evaluation.md; N ≥ 40 cases) │
+│  • 4-Condition Within-Subjects Benchmark (A: Raw, B: Docs, C: Content, │
+│    D: Full PASD)                                                       │
+│  • Metrics: SFA (Accuracy), NBP (Negative Precision), CAR (Abstention),│
+│    URR (Safety), and DRR (Downstream Resolution)                       │
+└────────────────────────────────────────────────────────────────────────┘
 ```
 
-This is an illustrative layout, not a required list of filenames beyond the normative root support artifact and discoverability requirements. The publishing workflow may also generate additional project-specific support sections.
+---
 
-## Repository contents
+## ⚖️ How PASD Compares to Existing Standards
 
+| Capability | Conventional Docs | `llms.txt` | `AGENTS.md` | AIRD (v1.2) | Hosted RAG Bots | **PASD (`AI-SUPPORT.md`)** |
+| :--- | :---: | :---: | :---: | :---: | :---: | :---: |
+| **Primary Audience** | Humans | Web Crawlers | Coding Agents | Agents/Devs | End Users | **End Users via BYOAI** |
+| **Zero Infrastructure Cost** | ✅ | ✅ | ✅ | ✅ | ❌ ($50–$300/mo) | ✅ **100% Free / Serverless** |
+| **Offline / Air-Gapped Ready** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ **Drag & Drop Local** |
+| **Mandatory Negative Space** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ **Prevents Hallucinations** |
+| **Third-Party Boundary Tables** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ **Isolates Dependency Faults** |
+| **Negative-Case Falsification** | ❌ | ❌ | ❌ | ❌ | ❌ | ✅ **Layer C $N \ge 40$ Suite** |
 
-| File                                                                                                               | Purpose                                                                         |
-| ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------- |
-| **[PASD 1.0 paper](MMG-PASD-1.0-Portable_AI_Support_Documentation.pdf)**                                           | Full proposed specification, discussion, evaluation methodology, and appendices |
-| **[main.tex](main.tex)**                                                                                           | Editable LaTeX source for the paper                                             |
-| **[AI-SUPPORT-documentation-generation-prompt.md](AI-SUPPORT-documentation-generation-prompt.md)**                 | Detailed extraction and authoring instructions for a coding assistant           |
-| **[AI-SUPPORT Generation and Publishing Workflow.txt](AI-SUPPORT%20Generation%20and%20Publishing%20Workflow.txt)** | Sequential prompts for generation, verification, cleanup, and publishing        |
-| **[LICENSE](LICENSE)**                                                                                             | Licensing and attribution information                                           |
+---
 
+## 🔒 Security & Privacy
 
+* **Indirect Prompt Injection Defense:** PASD prohibits support files from claiming system-level authority, attempting to override model safety policies, or directing autonomous tool actions outside answering support questions.
+* **Documentation Poisoning Guardrails:** Prescribes automated CI linting for high-risk shell patterns (`curl | bash`), protected release compilation pipelines, and `CODEOWNERS` policies for troubleshooting files.
+* **Data Privacy:** Users control their own data telemetry by choosing their model provider or running local, private models (LM Studio / Ollama). Redaction rules enforce stripping credentials, API keys, and personal paths before escalation.
 
+---
 
-## Reference implementation
+## 📖 Citation
 
-**[MyFileExplorer](https://github.com/dobrado76/MyFileExplorer)** is the reference application described in the paper: a desktop file manager whose repository distributes a consolidated **[AI-SUPPORT.md](https://github.com/dobrado76/MyFileExplorer/blob/main/AI-SUPPORT.md)** alongside conventional project documentation.
+If you use or build upon the PASD specification or generation prompts in your research or software projects, please cite:
 
-The example illustrates PASD's support-document structure and its treatment of real-world UI questions, third-party tools, and unsupported features. It is **not presented as completed empirical validation** of AI-answer accuracy.
+```bibtex
+@techreport{bee2026pasd,
+  author      = {Bee, Djeff},
+  title       = {Portable {AI}-Assisted Software Support: A Proposal for a Standardized, Self-Contained Documentation Framework},
+  institution = {Meaningfulness Media Group},
+  number      = {MMG-PASD-1.0},
+  year        = {2026},
+  month       = {October},
+  doi         = {10.5281/zenodo.19163276},
+  url         = {https://doi.org/10.5281/zenodo.19163276}
+}
+```
 
-## What PASD does not do
+---
 
-PASD does not require users to select any particular LLM provider; does not supply live application telemetry, execute repairs, or replace maintainer review; and does not guarantee that every assistant will ingest the entire document or retrieve every relevant passage. It complements rather than replaces conventional user documentation, issue trackers, and other support channels.
+## 📄 License
 
-Large support artifacts can exceed smaller models' context windows. A structured index and clear headings can aid retrieval, but model capability and the client's document-processing workflow still matter.
+The PASD specification document, extraction prompts, and workflow runbooks are licensed under the [Creative Commons Attribution 4.0 International (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/) license.
 
-## Contributing and discussion
-
-Feedback, implementation experiences, proposed clarifications, and reproducible evaluation results are welcome through [GitHub Issues](https://github.com/MeaningfulnessMediaGroup/MMG-PASD/issues). Please distinguish normative specification changes from recommendations or experimental findings, and include relevant sections and reproducible examples where possible.
-
-## Citation
-
-If you reference this proposal in academic or technical work, please cite the published specification:
-
-> Bee, D. (2026). *Portable AI-Assisted Software Support: A Proposal for a Standardized, Self-Contained Documentation Framework* (MMG-PASD-1.0). Meaningfulness Media Group. [GitHub repository](https://github.com/MeaningfulnessMediaGroup/MMG-PASD).
-
-
-
-## License
-
-© 2026 Meaningfulness Media Group. This repository's original documentation, paper, and authored instructional materials are made available under the **[Creative Commons Attribution 4.0 International License (CC BY 4.0)](https://creativecommons.org/licenses/by/4.0/)**, unless a particular file says otherwise. Attribution is required when redistributing or adapting licensed material. See [LICENSE](LICENSE).
-
-*PASD is a proposed open documentation convention, not a certification or guarantee of software support quality.*
+Copyright © 2026 Meaningfulness Media Group.
