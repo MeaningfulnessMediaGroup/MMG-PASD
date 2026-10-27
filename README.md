@@ -73,7 +73,7 @@ This repository houses the formal specification and the open-source generation t
 
 | Artifact | Description | Location |
 | :--- | :--- | :--- |
-| **White Paper / Formal Specification** | Complete 26-page academic specification (`MMG-PASD-1.0`). | [`MMG-PASD-1.0.pdf`](MMG-PASD-1.0-Portable_AI_Support_Documentation.pdf)) |
+| **White Paper / Formal Specification** | Complete 26-page academic specification (`MMG-PASD-1.0`). | [`MMG-PASD-1.0.pdf`](MMG-PASD-1.0-Portable_AI_Support_Documentation.pdf) |
 | **Knowledge Extraction Specification** | 14-section prompt instructing coding agents on how to audit code and extract a support manual. | [`AI-SUPPORT-documentation-generation-prompt.md`](AI-SUPPORT-documentation-generation-prompt.md) |
 | **Sequential Agent Runbook** | 5-step prompt script for Cursor, Claude Code, or Aider to prevent single-turn context truncation. | [`AI-SUPPORT Generation and Publishing Workflow.txt`](AI-SUPPORT%20Generation%20and%20Publishing%20Workflow.txt) |
 | **Live Reference Implementation** | Production deployment in a real-world Windows desktop file workbench. | [*MyFileExplorer* Repository](https://github.com/dobrado76/MyFileExplorer) <br> [`AI-SUPPORT.md` (Raw Payload)](https://raw.githubusercontent.com/dobrado76/MyFileExplorer/refs/heads/main/AI-SUPPORT.md) |
