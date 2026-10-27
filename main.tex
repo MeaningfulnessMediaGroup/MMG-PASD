@@ -74,7 +74,7 @@
 
 \begin{abstract}
 \noindent
-Traditional software documentation optimizes for human searchability, requiring users to translate observable symptoms into developer terminology, navigate fragmented pages, and synthesize recovery procedures manually. While general-purpose Large Language Models (LLMs) can perform this synthesis interactively, querying an ungrounded assistant about specific software routinely produces hallucinated settings and unsafe diagnostic advice. This paper proposes the \textit{Portable AI Support Documentation} (PASD) specification: a vendor-neutral framework for distributing a complete, self-contained technical support knowledge base (\texttt{AI-SUPPORT.md}) alongside application source code. PASD separates normative document requirements (Layer A) from recommended generation workflows (Layer B) and empirical support-quality evaluation (Layer C). By formalizing a three-state epistemic model (\textit{Supported}, \textit{Explicitly Unsupported}, and \textit{Unknown/Undocumented}), explicit third-party responsibility boundaries, and symptom-oriented diagnostic trees, PASD establishes a testable support contract. Operating under a ``Bring Your Own AI'' (BYOAI) model, the specification enables independent developers to provide grounded, self-service technical support without operating proprietary chatbot infrastructure.
+Traditional software documentation optimizes for human searchability, requiring users to translate observable symptoms into developer terminology, navigate fragmented pages, and synthesize recovery procedures manually. While general-purpose Large Language Models (LLMs) can perform this synthesis interactively, querying an ungrounded assistant about specific software routinely produces hallucinated settings and unsafe diagnostic advice. This paper proposes the \textit{Portable AI Support Documentation} (PASD) specification: a vendor-neutral framework for distributing a complete, self-contained technical support knowledge base (\texttt{AI-SUPPORT.md}) alongside the application it describes, including a binary build that ships no source code. PASD separates normative document requirements (Layer A) from recommended generation workflows (Layer B) and empirical support-quality evaluation (Layer C). By formalizing a three-state epistemic model (\textit{Supported}, \textit{Explicitly Unsupported}, and \textit{Unknown/Undocumented}), explicit third-party responsibility boundaries, and symptom-oriented diagnostic trees, PASD establishes a testable support contract. Operating under a ``Bring Your Own AI'' (BYOAI) model, the specification enables independent developers to provide grounded, self-service technical support without operating proprietary chatbot infrastructure.
 \end{abstract}
 
 \vspace{0.4em}
@@ -125,7 +125,7 @@ At the same time, millions of users now have immediate access to capable Large L
 
 This paper addresses a practical systems-engineering question: \textbf{how should a software project structure and distribute its operational knowledge so that a user's existing AI assistant can provide accurate, bounded first-line technical support?}
 
-We propose the \textbf{Portable AI Support Documentation (PASD)} framework. Rather than requiring every developer to host a proprietary Retrieval-Augmented Generation (RAG) chatbot or pay for recurring API infrastructure, PASD specifies a single, self-contained, version-bounded Markdown document---canonically named \texttt{AI-SUPPORT.md}---distributed at the root of the project repository. 
+We propose the \textbf{Portable AI Support Documentation (PASD)} framework. Rather than requiring every developer to host a proprietary Retrieval-Augmented Generation (RAG) chatbot or pay for recurring API infrastructure, PASD specifies a single, self-contained, version-bounded Markdown document---canonically named \texttt{AI-SUPPORT.md}---distributed with the application, at the root of a source repository or inside a binary build that includes no source. 
 
 To maintain a clean separation of concerns, PASD is organized into three distinct layers:
 \begin{enumerate}
@@ -187,8 +187,9 @@ Commercial documentation hosts and AI support services provide integrated chatbo
 
 The architectural premise of PASD is the separation of knowledge maintenance from inference execution. Instead of embedding an AI service into the application, the maintainer publishes a verified, structured knowledge artifact ($K$), and the user supplies their chosen language model ($M$) to interpret it.
 
-% The display equation belongs with this heading. Without the break it
-% opens the next page alone.
+The separation is a control boundary, not only a packaging choice. After $K$ is published, the maintainer does not select $M$, does not observe $Q$ (the question or query) or $E$ (the supporting evidence), and cannot insert a prompt or a retrieval step into the session. Whatever the assistant must respect has to already be written into the artifact.
+
+% The formal model, including its display equation, stays on the next page.
 \newpage
 \subsection{A Conceptual Model of Grounded Support}
 To clarify what a support document can and cannot guarantee, we model a single-turn or multi-turn support interaction as a mapping from five inputs to a three-dimensional outcome tuple:
@@ -341,7 +342,7 @@ When a user attaches \texttt{AI-SUPPORT.md} to a chat session, the file is inges
 Within those boundaries, however, instruction-tuned assistants actively look for task-framing cues when interpreting uploaded documents. PASD requires a concise \textbf{Instructions for AI Assistants} section near the top of the document that establishes document-level answering conventions based on the Three-State Epistemic Model:
 
 \begin{quote}
-\small\ttfamily\raggedright
+\setstretch{1}\small\ttfamily\raggedright
 \#\# Instructions for AI Assistants (PASD Support Guidance)\par
 This document is the authoritative support reference for [Project Name] [Version]. When answering user questions using this file:\par
 1. Confirm Retrieval: Verify that you can read this document. If only a URL was provided and web access failed, ask the user to upload AI-SUPPORT.md directly.\par
@@ -402,6 +403,8 @@ While direct file download-and-upload is the baseline interoperable method (Sect
 
 When a web-capable assistant fetches a standard GitHub viewer page, its browsing tool may ingest HTML wrapper markup, navigation bars, commit metadata, and scripts in addition to the document. That wrapper consumes context tokens, may encounter tool-specific truncation, and can push support-relevant facts into less reliably retrieved positions in a long context~\citep{liu2024lost}. Providing the \texttt{raw.githubusercontent.com} endpoint delivers unformatted Markdown directly when URL retrieval is supported, while the embedded guidance (Section~\ref{sec:topology}) instructs the assistant to request a direct file upload if URL retrieval fails.
 
+The branch-tip URLs above are the right target only when the user is running that branch. A fetch of \texttt{refs/heads/main} returns the repository as it exists at request time, which may describe flags, defaults, or recovery steps the installed build does not have, or may omit a limitation an older release still carries. The assistant can then confirm that it read a document and still answer for the wrong version. Projects SHOULD ship \texttt{AI-SUPPORT.md} in the versioned release archive, and if they also publish a raw URL, pin it to the tag or commit named in the document header (\texttt{PASD-003}).
+
 
 % -------------------
 % Section 8 - Layer C: Empirical Verification and Evaluation Protocol
@@ -421,6 +424,8 @@ A complete benchmark suite SHOULD contain at least $N \ge 40$ test cases stratif
     \item \textbf{Explicit Negative-Space Queries ($20\%$; 8 of 40):} Plausible requests for nonexistent settings, unsupported file formats, or unimplemented features where the ground truth is State 2 (\textit{Explicitly Unsupported}).
     \item \textbf{Underspecified or Unknown Queries ($15\%$; 6 of 40):} Ambiguous symptom reports missing critical evidence $E$, or questions outside documented scope where the ground truth is State 3 (\textit{Unknown/Undocumented}, requiring calibrated abstention or clarification).
 \end{enumerate}
+
+Each case MUST record, before any model is run, its category, the application version $V$ it assumes, and a ground-truth label naming the expected epistemic state together with what counts as an admissible answer or abstention. That label belongs to the suite rather than to the scoring pass, and it MUST NOT be revised to accommodate a model's response.
 
 \subsection{Four-Condition Experimental Design}
 Because a comprehensive \texttt{AI-SUPPORT.md} file typically contains more total text than a brief \texttt{README.md}, a simple comparison between the two confounds \textit{information volume} with \textit{PASD structural conventions}. To separate coverage from presentation effects, we define a four-condition within-subjects evaluation across a preregistered set of models $M_1, \dots, M_k$ (run in isolated, zero-history sessions with a fixed prompt template and temperature fixed at $0.0$--$0.2$):
@@ -563,15 +568,6 @@ Wen, B., Yao, J., Feng, S., Xu, C., Tsvetkov, Y., Howe, B., \& Wang, L. L. (2025
 % -------------------
 \appendix
 
-\thispagestyle{empty}
-\vspace*{0.35\textheight}
-\begin{center}
-{\LARGE\bfseries Appendices}
-\end{center}
-\vfill
-\clearpage
-
-
 % -------------------
 % Appendix A - Reference Implementation: MyFileExplorer
 % -------------------
@@ -666,6 +662,7 @@ The \path{AI-SUPPORT-documentation-generation-prompt.md} file instructs the codi
     \item \textbf{Bundling, CI Checks, \& Evaluation Suite (Sections 11--14):} Create deterministic bundling/validation commands for CI and construct \path{docs/support-evaluation.md} with independent positive and negative test cases.
 \end{enumerate}
 
+\newpage
 \subsection{Sequential Execution Commands}
 To avoid single-turn output truncation, maintainers paste the following prompts, unchanged, as five discrete turns. The text is the published runbook.
 
